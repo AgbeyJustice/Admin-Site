@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>ZOA TRACK — Admin Portal</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+  :root{
+    --brand:#1da383; --accent:#0066cc; --bg:#f7f9fc; --card:#ffffff;
+    --text:#1f2937; --muted:#667085; --border:#e5e7eb; --dark:#0b1226;
+    --success:#27ae60; --danger:#c0392b; --info:#0066cc;
+  }
+
+  input, select {font-size:16px}
+  body{margin:0;font-family:Arial,sans-serif;background:var(--bg);color:var(--text);font-size:24px}
+  header{background:var(--brand);color:#fff;padding:1rem;display:flex;justify-content:space-between;align-items:center}
+  header h1{margin:0;font-size:1.8rem}
+  nav a{color:#fff;text-decoration:none;margin-left:1rem}
+  .container{padding:1rem}
+  h2{color:var(--accent);margin-top:1.5rem}
+  table{width:100%;border-collapse:collapse;margin-top:1rem;background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+  th,td{border-bottom:1px solid var(--border);padding:.5rem;text-align:left;vertical-align:top;font-size:0.85rem}
+  th{background:#0c3470;color:#fff}
+  button{padding:.4rem .7rem;border:none;border-radius:8px;cursor:pointer;font-size:16px}
+  .approve{background:var(--success);color:#fff}
+  .reject{background:var(--danger);color:#fff}
+  .btn{background:var(--info);color:#fff}
+  .subtle{color:var(--muted);font-size:.9rem}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1rem;margin-top:1rem}
+  .active-link{font-weight:bold;text-decoration:underline;cursor:pointer}
+  .section{display:none}
+  .section.active{display:block}
+  ul#menu{display:flex;gap:1rem;list-style:none;padding:0;margin:0;flex-wrap:wrap}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>ZOA TRACK — Admin Portal</h1>
+  <nav>
+    <a href="index.html">Home</a>
+    <a href="booking.html">Customer</a>
+    <a href="operator.html">Operator</a>
+  </nav>
+</header>
+
+<div class="container">
+  <ul id="menu">
+    <li data-target="dashboard" class="active-link">Dashboard</li>
+    <li data-target="prices">Prices</li>
+    <li data-target="equipment">Equipment</li>
+    <li data-target="bookings">Bookings</li>
+    <li data-target="operators">Operators</li>
+    <li data-target="activity">Activity</li>
+    <li data-target="reports">Reports</li>
+    <li data-target="messages">Messages</li>
+  </ul>
+
+  <h2 id="sectionTitle">Dashboard</h2>
+
+  <!-- Dashboard -->
+  <div id="dashboard" class="section active">
+    <div class="card">
+      <p>Total bookings: <span id="dashTotal">0</span></p>
+      <p>Pending: <span id="dashPending">0</span></p>
+      <p>Approved: <span id="dashApproved">0</span></p>
+      <p>Active: <span id="dashActive">0</span></p>
+      <p>Completed: <span id="dashCompleted">0</span></p>
+    </div>
+  </div>
+
+  <!-- Prices -->
+  <div id="prices" class="section">
+    <div class="card">
+      <h2>Edit Equipment Prices (Daily Rates)</h2>
+      <table>
+        <thead>
+          <tr><th>Equipment</th><th>Price (GHS/day)</th></tr>
+        </thead>
+        <tbody id="priceTable"></tbody>
+      </table>
+      <button class="approve" onclick="savePrices()">Save Prices</button>
+    </div>
+  </div>
+
+  <!-- Equipment -->
+  <div id="equipment" class="section">
+    <div style="overflow-x:auto;">
+      <table style="font-size:0.8rem;">
+        <thead><tr><th>ID</th><th>Name</th><th>Status</th></tr></thead>
+        <tbody id="equipmentTable"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Bookings -->
+  <div id="bookings" class="section">
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th><th>Customer</th><th>Equipment</th><th>Location</th><th>Payment</th>
+          <th>Status</th><th>Operator</th><th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="bookingTable"></tbody>
+    </table>
+    <button class="reject" onclick="clearAllBookings()">Clear all bookings</button>
+  </div>
+
+  <!-- Operators -->
+  <div id="operators" class="section">
+    <table>
+      <thead><tr><th>Name</th><th>Machine</th><th>Completed</th><th>Active</th></tr></thead>
+      <tbody id="operatorsTable"></tbody>
+    </table>
+  </div>
+
+  <!-- Activity -->
+  <div id="activity" class="section">
+    <button class="reject" onclick="clearActivity()" style="margin-bottom:1rem">Clear Activity Log</button>
+    <ul id="activityLog"></ul>
+  </div>
+
+  <!-- Reports -->
+  <div id="reports" class="section">
+    <button class="reject" onclick="clearReports()" style="margin-bottom:1rem">Reset All Reports Data</button>
+    <div class="card">
+      <p>Total bookings: <span id="repTotalBookings">0</span></p>
+      <p>Pending: <span id="repPending">0</span></p>
+      <p>Approved: <span id="repApproved">0</span></p>
+      <p>Active: <span id="repActive">0</span></p>
+      <p>Completed: <span id="repCompleted">0</span></p>
+    </div>
+    <h3>By equipment</h3>
+    <table><thead><tr><th>Equipment</th><th>Total</th><th>Completed</th></tr></thead><tbody id="repByEquipment"></tbody></table>
+    <h3>By operator</h3>
+    <table><thead><tr><th>Operator</th><th>Assigned</th><th>Completed</th></tr></thead><tbody id="repByOperator"></tbody></table>
+    <button id="exportCsvBtn" class="btn">Export CSV</button>
+  </div>
+
+  <!-- Messages -->
+  <div id="messages" class="section">
+    <div id="messagesList"></div>
+  </div>
+</div>
+
+<script>
+/* SYNCED Equipment list - MUST match booking.html exactly */
+const equipmentList = [
+  "Articulated Truck 40T",
+  "Backhoe Loader",
+  "Compactor",
+  "Motor Grader",
+  "Hydraulic Excavator 20T",
+  "Wheel Excavator",
+  "Excavator with Hammer",
+  "Long Boom Excavator",
+  "Mini Excavator",
+  "Track Dozer D6",
+  "Wheel Loader 3.5m³",
+  "Hammer Backhoe",
+  "Forklift 5T",
+  "Flat Trailer",
+  "Truck & Semi-trailer",
+  "Lowbed Trailer",
+  "Water Truck"
+];
+
+function loadPrices(){
+  let prices = JSON.parse(localStorage.getItem("EQUIPMENT_PRICES")) || {};
+  const table = document.getElementById("priceTable");
+  table.innerHTML = "";
+  equipmentList.forEach(eq=>{
+    const val = prices[eq] || 0;
+    table.innerHTML += `
+      <tr>
+        <td>${eq}</td>
+        <td><input type="number" id="price_${btoa(eq)}" value="${val}" style="width:150px"></td>
+      </tr>`;
+  });
+}
+
+function savePrices(){
+  let prices = {};
+  equipmentList.forEach(eq=>{
+    const input = document.getElementById("price_"+btoa(eq));
+    prices[eq] = parseInt(input.value, 10) || 0;
+  });
+  localStorage.setItem("EQUIPMENT_PRICES", JSON.stringify(prices));
+  pushActivity("Equipment prices updated");
+  alert("Prices updated and synced!");
+}
+
+/* Operators list */
+const operators = [
+  { name: "John Doe", machine: "Excavator" },
+  { name: "Kwesi Nkrumah", machine: "Excavator" },
+  { name: "Ama Ofori", machine: "Excavator" },
+  { name: "Mary Ann", machine: "Roller" },
+  { name: "Kojo Mensah", machine: "Roller" },
+  { name: "Yaw Owusu", machine: "Roller" },
+  { name: "Kofi Mensah", machine: "Dozer" },
+  { name: "Abena Serwaa", machine: "Dozer" },
+  { name: "Kwame Boateng", machine: "Dozer" },
+  { name: "Akosua Owusu", machine: "Compactor" },
+  { name: "Efua Darko", machine: "Compactor" },
+  { name: "Kojo Adjei", machine: "Compactor" },
+  { name: "Yaw Asante", machine: "Mini Excavator" },
+  { name: "Kwame Asiedu", machine: "Mini Excavator" },
+  { name: "Ama Serwaa", machine: "Mini Excavator" },
+  { name: "Abena Owusu", machine: "Wheel Loader" },
+  { name: "Kwame Darko", machine: "Wheel Loader" },
+  { name: "Kojo Owusu", machine: "Wheel Loader" },
+  { name: "Efua Mensah", machine: "Forklift" },
+  { name: "Kwesi Boateng", machine: "Forklift" },
+  { name: "Ama Owusu", machine: "Forklift" },
+  { name: "Kojo Asante", machine: "Trailer" },
+  { name: "Yaw Mensah", machine: "Trailer" },
+  { name: "Abena Darko", machine: "Trailer" },
+  { name: "Kwaku Owusu", machine: "Grader" },
+  { name: "Ama Nkrumah", machine: "Grader" },
+  { name: "Yaw Kumi", machine: "Grader" }
+];
+
+/* Activity helper */
+function pushActivity(text){
+  let adminActivity = JSON.parse(localStorage.getItem("adminActivity")) || [];
+  adminActivity.push(`[${new Date().toLocaleString()}] ${text}`);
+  localStorage.setItem("adminActivity", JSON.stringify(adminActivity));
+  loadActivity();
+}
+
+/* Dashboard updater */
+function updateDashboard(){
+  const bookings = JSON.parse(localStorage.getItem("bookings")) || [];
+  const total = bookings.length;
+  const pending = bookings.filter(b=>(b.status||"Pending")==="Pending").length;
+  const approved = bookings.filter(b=>b.status==="Approved").length;
+  const active = bookings.filter(b=>b.status==="Started"||b.status==="In Progress").length;
+  const completed = bookings.filter(b=>b.status==="Completed").length;
+  document.getElementById("dashTotal").textContent = total;
+  document.getElementById("dashPending").textContent = pending;
+  document.getElementById("dashApproved").textContent = approved;
+  document.getElementById("dashActive").textContent = active;
+  document.getElementById("dashCompleted").textContent = completed;
+}
+
+/* Machine category helpers */
+function getMachineCategory(name=""){
+  const n=name.toLowerCase();
+  if(n.includes("mini excavator"))return "Mini Excavator";
+  if(n.includes("excavator"))return "Excavator";
+  if(n.includes("wheel loader")||n.includes("loader"))return "Wheel Loader";
+  if(n.includes("grader"))return "Grader";
+  if(n.includes("compactor"))return "Compactor";
+  if(n.includes("dozer"))return "Dozer";
+  if(n.includes("forklift"))return "Forklift";
+  if(n.includes("lowbed")||n.includes("trailer"))return "Trailer";
+  if(n.includes("roller"))return "Roller";
+  return "General";
+}
+function getEligibleOperators(category){
+  const filtered=operators.filter(op=>op.machine.toLowerCase()===category.toLowerCase());
+  return filtered.length>=3?filtered:operators;
+}
+
+/* Equipment management */
+function loadEquipment(){
+  let equipmentStatus = JSON.parse(localStorage.getItem("equipment")) || {};
+  const t = document.getElementById("equipmentTable"); 
+  t.innerHTML = "";
+  equipmentList.forEach((eq,i)=>{
+    const status = equipmentStatus[eq] || "Available";
+    t.innerHTML += `
+      <tr>
+        <td style="font-size:0.75rem;">EQ${String(i+1).padStart(3,"0")}</td>
+        <td style="font-size:0.8rem;">${eq}</td>
+        <td>
+          <select onchange="updateEquipmentStatus('${eq}', this.value)" style="font-size:0.75rem;padding:0.3rem;">
+            <option value="Available" ${status==="Available"?"selected":""}>Available</option>
+            <option value="Rented" ${status==="Rented"?"selected":""}>Rented</option>
+            <option value="Maintenance" ${status==="Maintenance"?"selected":""}>Maintenance</option>
+          </select>
+        </td>
+      </tr>`;
+  });
+}
+function updateEquipmentStatus(eq,status){
+  let equipmentStatus = JSON.parse(localStorage.getItem("equipment")) || {};
+  equipmentStatus[eq] = status;
+  localStorage.setItem("equipment", JSON.stringify(equipmentStatus));
+  pushActivity(`Equipment "${eq}" status changed to ${status}`);
+  updateDashboard();
+}
+
+/* Bookings with operator assignment and Start/Stop */
+function loadBookings(){
+  const bookings = JSON.parse(localStorage.getItem("bookings")) || [];
+  const t = document.getElementById("bookingTable"); 
+  t.innerHTML = "";
+  bookings.forEach((b,i)=>{
+    const category = getMachineCategory(b.equipment||"");
+    const eligible = getEligibleOperators(category);
+    const opSelect = `
+      <select onchange="assignOperator(${i}, this.value)">
+        <option value="">Assign operator</option>
+        ${eligible.map(op=>`<option value="${op.name}" ${b.operator===op.name?'selected':''}>${op.name} (${op.machine})</option>`).join("")}
+      </select>`;
+    t.innerHTML += `
+      <tr>
+        <td>${b.id}</td>
+        <td>${b.name||""}<br><span class="subtle">${b.phone||""} • ${b.email||""}</span></td>
+        <td>${b.equipment||""}</td>
+        <td>${b.location||""}</td>
+        <td>${b.payment||""}</td>
+        <td>${b.status||"Pending"}</td>
+        <td>${b.operator||""}<br>${opSelect}</td>
+        <td>
+          <button class="approve" onclick="updateBooking(${i}, 'Approved')">Approve</button>
+          <button class="reject" onclick="updateBooking(${i}, 'Rejected')">Reject</button>
+          <button class="approve" onclick="adminStart(${i})">Start</button>
+          <button class="reject" onclick="adminStop(${i})">Stop</button>
+        </td>
+      </tr>`;
+  });
+  updateDashboard();
+}
+function assignOperator(index,name){
+  let bookings = JSON.parse(localStorage.getItem("bookings")) || [];
+  if(!bookings[index]) return;
+  bookings[index].operator = name || null;
+  localStorage.setItem("bookings", JSON.stringify(bookings));
+  pushActivity(`Assigned operator "${name||'None'}" to booking ${bookings[index].id}`);
+  loadBookings();
+}
+function updateBooking(index,status){
+  let bookings = JSON.parse(localStorage.getItem("bookings")) || [];
+  if(!bookings[index]) return;
+  const prev = bookings[index].status || "Pending";
+  bookings[index].status = status;
+  localStorage.setItem("bookings", JSON.stringify(bookings));
+  pushActivity(`Booking ${bookings[index].id} ${status.toLowerCase()}`);
+
+  const eq = bookings[index].equipment;
+  let equipmentStatus = JSON.parse(localStorage.getItem("equipment")) || {};
+  if(status==="Approved"){ equipmentStatus[eq] = "Rented"; }
+  else if(status==="Rejected" && (equipmentStatus[eq]==="Rented" || prev==="Approved")){ equipmentStatus[eq] = "Available"; }
+  localStorage.setItem("equipment", JSON.stringify(equipmentStatus));
+
+  loadBookings();
+  loadEquipment();
+}
+
+function adminStart(index){
+  let bookings = JSON.parse(localStorage.getItem("bookings")) || [];
+  if(!bookings[index]) return;
+  bookings[index].status = "Started";
+  bookings[index].startTime = new Date().toISOString();
+  localStorage.setItem("bookings", JSON.stringify(bookings));
+  pushActivity(`Admin marked job ${bookings[index].id} as Started (${bookings[index].equipment||""})`);
+  loadBookings();
+  updateDashboard();
+}
+function adminStop(index){
+  let bookings = JSON.parse(localStorage.getItem("bookings")) || [];
+  if(!bookings[index]) return;
+  bookings[index].status = "Completed";
+  bookings[index].endTime = new Date().toISOString();
+
+  const eq = bookings[index].equipment;
+  let equipmentStatus = JSON.parse(localStorage.getItem("equipment")) || {};
+  if(eq) equipmentStatus[eq] = "Available";
+  localStorage.setItem("equipment", JSON.stringify(equipmentStatus));
+  localStorage.setItem("bookings", JSON.stringify(bookings));
+
+  pushActivity(`Admin marked job ${bookings[index].id} as Completed (${eq||""})`);
+  loadBookings();
+  loadEquipment();
+  updateDashboard();
+}
+
+function clearAllBookings(){
+  if(confirm("Are you sure you want to clear all bookings? This action cannot be undone.")){
+    localStorage.removeItem("bookings");
+    loadBookings();
+    updateDashboard();
+    renderOperators();
+    loadReports();
+    pushActivity("All bookings cleared by admin");
+  }
+}
+
+/* Clear activity log */
+function clearActivity(){
+  if(confirm("Are you sure you want to clear the entire activity log? This action cannot be undone.")){
+    localStorage.removeItem("adminActivity");
+    localStorage.removeItem("operatorActivity");
+    localStorage.removeItem("operatorLogs");
+    loadActivity();
+    alert("Activity log cleared!");
+  }
+}
+
+/* Clear/reset reports data */
+function clearReports(){
+  if(confirm("Are you sure you want to reset all reports data? This will clear all bookings, activity, and operator logs. This action cannot be undone.")){
+    localStorage.removeItem("bookings");
+    localStorage.removeItem("adminActivity");
+    localStorage.removeItem("operatorActivity");
+    localStorage.removeItem("operatorLogs");
+    loadBookings();
+    updateDashboard();
+    renderOperators();
+    loadReports();
+    loadActivity();
+    alert("All reports data has been reset!");
+  }
+}
+
+function renderOperators(){
+  const t = document.getElementById("operatorsTable"); 
+  t.innerHTML = "";
+  const bookings = JSON.parse(localStorage.getItem("bookings")) || [];
+  operators.forEach(op=>{
+    const completed = bookings.filter(b=>b.operator===op.name && b.status==="Completed").length;
+    const active = bookings.filter(b=>b.operator===op.name && (b.status==="Started"||b.status==="In Progress")).length;
+    t.innerHTML += `<tr><td>${op.name}</td><td>${op.machine}</td><td>${completed}</td><td>${active}</td></tr>`;
+  });
+}
+
+function loadActivity(){
+  const log = document.getElementById("activityLog");
+  log.innerHTML = "";
+  const adminActivity = JSON.parse(localStorage.getItem("adminActivity")) || [];
+  adminActivity.slice().reverse().forEach(entry=>{
+    const li = document.createElement("li");
+    li.textContent = entry;
+    log.appendChild(li);
+  });
+}
+
+function loadReports(){
+  const bookings = JSON.parse(localStorage.getItem("bookings")) || [];
+  const total = bookings.length;
+  const pending = bookings.filter(b=>(b.status||"Pending")==="Pending").length;
+  const approved = bookings.filter(b=>b.status==="Approved").length;
+  const active = bookings.filter(b=>b.status==="Started"||b.status==="In Progress").length;
+  const completed = bookings.filter(b=>b.status==="Completed").length;
+
+  document.getElementById("repTotalBookings").textContent = total;
+  document.getElementById("repPending").textContent = pending;
+  document.getElementById("repApproved").textContent = approved;
+  document.getElementById("repActive").textContent = active;
+  document.getElementById("repCompleted").textContent = completed;
+
+  const byEq = {};
+  bookings.forEach(b=>{
+    const key = b.equipment || "Unknown";
+    byEq[key] = byEq[key] || { count:0, completed:0 };
+    byEq[key].count++;
+    if(b.status==="Completed") byEq[key].completed++;
+  });
+  const eqTbody = document.getElementById("repByEquipment");
+  eqTbody.innerHTML = "";
+  Object.keys(byEq).forEach(eq=>{
+    eqTbody.innerHTML += `<tr><td>${eq}</td><td>${byEq[eq].count}</td><td>${byEq[eq].completed}</td></tr>`;
+  });
+
+  const byOp = {};
+  bookings.forEach(b=>{
+    const key = b.operator || "Unassigned";
+    byOp[key] = byOp[key] || { assigned:0, completed:0 };
+    byOp[key].assigned++;
+    if(b.status==="Completed") byOp[key].completed++;
+  });
+  const opTbody = document.getElementById("repByOperator");
+  opTbody.innerHTML = "";
+  Object.keys(byOp).forEach(op=>{
+    opTbody.innerHTML += `<tr><td>${op}</td><td>${byOp[op].assigned}</td><td>${byOp[op].completed}</td></tr>`;
+  });
+}
+
+function loadMessages(){
+  const messages = JSON.parse(localStorage.getItem('contactMessages')) || [];
+  const list = document.getElementById('messagesList');
+  list.innerHTML = '';
+  if(messages.length === 0){
+    list.innerHTML = '<p>No messages yet.</p>';
+    return;
+  }
+  messages.forEach((msg, index) => {
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.innerHTML = `
+      <strong>${msg.name} (${msg.email})</strong><br>
+      <small>${new Date(msg.date).toLocaleString()}</small><br>
+      <p>${msg.msg}</p>
+      <button class="reject" onclick="deleteMessage(${index})">Delete</button>
+    `;
+    list.appendChild(card);
+  });
+}
+function deleteMessage(index){
+  let messages = JSON.parse(localStorage.getItem('contactMessages')) || [];
+  messages.splice(index, 1);
+  localStorage.setItem('contactMessages', JSON.stringify(messages));
+  loadMessages();
+}
+
+function exportBookingsCsv(){
+  const bookings = JSON.parse(localStorage.getItem("bookings")) || [];
+  const header = ["id","name","phone","email","equipment","location","payment","status","operator","startTime","endTime"];
+  const rows = bookings.map(b=>[
+    b.id||"", b.name||"", b.phone||"", b.email||"",
+    b.equipment||"", b.location||"", b.payment||"",
+    b.status||"", b.operator||"",
+    b.startTime||"", b.endTime||""
+  ]);
+  const csv = [header.join(","), ...rows.map(r=>r.map(v=>String(v).replace(/"/g,'""')).map(v=>`"${v}"`).join(","))].join("\n");
+  const blob = new Blob([csv], {type: "text/csv;charset=utf-8;"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `bookings_${new Date().toISOString().slice(0,10)}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+const menu = document.getElementById("menu");
+menu.addEventListener("click",(e)=>{
+  const li = e.target.closest("li"); if(!li) return;
+  const target = li.dataset.target; if(!target) return;
+  menu.querySelectorAll("li").forEach(i=>i.classList.remove("active-link"));
+  li.classList.add("active-link");
+  document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"));
+  document.getElementById(target).classList.add("active");
+  document.getElementById("sectionTitle").textContent = target.charAt(0).toUpperCase()+target.slice(1);
+  if(target==="dashboard") updateDashboard();
+  if(target==="equipment") loadEquipment();
+  if(target==="bookings") loadBookings();
+  if(target==="operators") renderOperators();
+  if(target==="activity") loadActivity();
+  if(target==="reports") { loadReports(); }
+  if(target==="messages") { loadMessages(); }
+  if(target==="prices") loadPrices();
+});
+
+window.addEventListener("storage",(event)=>{
+  if(event.key==="bookings"){ loadBookings(); updateDashboard(); renderOperators(); loadReports(); }
+  if(event.key==="equipment"){ loadEquipment(); updateDashboard(); }
+  if(event.key==="adminActivity"){ loadActivity(); }
+  if(event.key==="EQUIPMENT_PRICES"){ loadPrices(); }
+});
+
+document.addEventListener("DOMContentLoaded",()=>{
+  let equipmentStatus = JSON.parse(localStorage.getItem("equipment")) || {};
+  equipmentList.forEach(name=>{ if(!(name in equipmentStatus)) equipmentStatus[name]="Available"; });
+  localStorage.setItem("equipment", JSON.stringify(equipmentStatus));
+
+  const exportBtn = document.getElementById("exportCsvBtn");
+  if (exportBtn) exportBtn.addEventListener("click", exportBookingsCsv);
+
+  loadEquipment();
+  loadBookings();
+  renderOperators();
+  updateDashboard();
+  loadActivity();
+  loadReports();
+  loadMessages();
+  loadPrices();
+});
+</script>
+</body>
+</html>
